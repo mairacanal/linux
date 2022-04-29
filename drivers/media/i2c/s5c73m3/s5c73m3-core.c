@@ -10,12 +10,11 @@
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/firmware.h>
-#include <linux/gpio.h>
+#include <linux/gpio/consumer.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
 #include <linux/media.h>
 #include <linux/module.h>
-#include <linux/of_gpio.h>
 #include <linux/of_graph.h>
 #include <linux/regulator/consumer.h>
 #include <linux/sizes.h>
@@ -1347,22 +1346,26 @@ static int s5c73m3_oif_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	return 0;
 }
 
-static int s5c73m3_gpio_set_value(struct s5c73m3 *priv, int id, u32 val)
+static int s5c73m3_gpio_set_value(struct gpio_desc *gpio, int val)
 {
-	if (!gpio_is_valid(priv->gpio[id].gpio))
+	if (!gpio)
 		return 0;
-	gpio_set_value(priv->gpio[id].gpio, !!val);
+	gpiod_set_value(gpio, !!val);
 	return 1;
 }
 
-static int s5c73m3_gpio_assert(struct s5c73m3 *priv, int id)
+static int s5c73m3_gpio_assert(struct gpio_desc *gpio)
 {
-	return s5c73m3_gpio_set_value(priv, id, priv->gpio[id].level);
+	int val = gpiod_get_value(gpio);
+
+	return s5c73m3_gpio_set_value(gpio, val);
 }
 
-static int s5c73m3_gpio_deassert(struct s5c73m3 *priv, int id)
+static int s5c73m3_gpio_deassert(struct gpio_desc *gpio)
 {
-	return s5c73m3_gpio_set_value(priv, id, !priv->gpio[id].level);
+	int val = gpiod_get_value(gpio);
+
+	return s5c73m3_gpio_set_value(gpio, !val);
 }
 
 static int __s5c73m3_power_on(struct s5c73m3 *state)
@@ -1386,10 +1389,10 @@ static int __s5c73m3_power_on(struct s5c73m3 *state)
 	v4l2_dbg(1, s5c73m3_dbg, &state->oif_sd, "clock frequency: %ld\n",
 					clk_get_rate(state->clock));
 
-	s5c73m3_gpio_deassert(state, STBY);
+	s5c73m3_gpio_deassert(state->gpio_stby);
 	usleep_range(100, 200);
 
-	s5c73m3_gpio_deassert(state, RSET);
+	s5c73m3_gpio_deassert(state->gpio_reset);
 	usleep_range(50, 100);
 
 	return 0;
@@ -1404,10 +1407,10 @@ static int __s5c73m3_power_off(struct s5c73m3 *state)
 {
 	int i, ret;
 
-	if (s5c73m3_gpio_assert(state, RSET))
+	if (s5c73m3_gpio_assert(state->gpio_reset))
 		usleep_range(10, 50);
 
-	if (s5c73m3_gpio_assert(state, STBY))
+	if (s5c73m3_gpio_assert(state->gpio_stby))
 		usleep_range(100, 200);
 
 	clk_disable_unprepare(state->clock);
@@ -1545,50 +1548,34 @@ static const struct v4l2_subdev_ops oif_subdev_ops = {
 
 static int s5c73m3_configure_gpios(struct s5c73m3 *state)
 {
-	static const char * const gpio_names[] = {
-		"S5C73M3_STBY", "S5C73M3_RST"
-	};
 	struct i2c_client *c = state->i2c_client;
-	struct s5c73m3_gpio *g = state->gpio;
-	int ret, i;
+	struct device *dev = &c->dev;
+	struct device_node *np = dev->of_node;
 
-	for (i = 0; i < GPIO_NUM; ++i) {
-		unsigned int flags = GPIOF_DIR_OUT;
-		if (g[i].level)
-			flags |= GPIOF_INIT_HIGH;
-		ret = devm_gpio_request_one(&c->dev, g[i].gpio, flags,
-					    gpio_names[i]);
-		if (ret) {
-			v4l2_err(c, "failed to request gpio %s\n",
-				 gpio_names[i]);
-			return ret;
-		}
+	state->gpio_stby = gpiod_get_from_of_node(np, "standby-gpios", 0, GPIOD_ASIS,
+			"S5C73M3_STBY");
+
+	if (IS_ERR(state->gpio_stby)) {
+		v4l2_err(c, "failed to request gpio S5C73M3_STBY");
+		return PTR_ERR(state->gpio_stby);
 	}
-	return 0;
-}
 
-static int s5c73m3_parse_gpios(struct s5c73m3 *state)
-{
-	static const char * const prop_names[] = {
-		"standby-gpios", "xshutdown-gpios",
-	};
-	struct device *dev = &state->i2c_client->dev;
-	struct device_node *node = dev->of_node;
-	int ret, i;
+	if (state->gpio_stby)
+		gpiod_direction_output(state->gpio_stby,
+				!gpiod_is_active_low(state->gpio_stby));
 
-	for (i = 0; i < GPIO_NUM; ++i) {
-		enum of_gpio_flags of_flags;
+	state->gpio_reset = gpiod_get_from_of_node(np, "xshutdown-gpios", 0, GPIOD_ASIS,
+			"S5C73M3_RST");
 
-		ret = of_get_named_gpio_flags(node, prop_names[i],
-					      0, &of_flags);
-		if (ret < 0) {
-			dev_err(dev, "failed to parse %s DT property\n",
-				prop_names[i]);
-			return -EINVAL;
-		}
-		state->gpio[i].gpio = ret;
-		state->gpio[i].level = !(of_flags & OF_GPIO_ACTIVE_LOW);
+	if (IS_ERR(state->gpio_reset)) {
+		v4l2_err(c, "failed to request gpio S5C73M3_RST");
+		return PTR_ERR(state->gpio_reset);
 	}
+
+	if (state->gpio_reset)
+		gpiod_direction_output(state->gpio_reset,
+				!gpiod_is_active_low(state->gpio_reset));
+
 	return 0;
 }
 
@@ -1608,8 +1595,8 @@ static int s5c73m3_get_platform_data(struct s5c73m3 *state)
 		}
 
 		state->mclk_frequency = pdata->mclk_frequency;
-		state->gpio[STBY] = pdata->gpio_stby;
-		state->gpio[RSET] = pdata->gpio_reset;
+		state->gpio_stby = pdata->gpio_stby;
+		state->gpio_reset = pdata->gpio_reset;
 		return 0;
 	}
 
@@ -1623,10 +1610,6 @@ static int s5c73m3_get_platform_data(struct s5c73m3 *state)
 		dev_info(dev, "using default %u Hz clock frequency\n",
 					state->mclk_frequency);
 	}
-
-	ret = s5c73m3_parse_gpios(state);
-	if (ret < 0)
-		return -EINVAL;
 
 	node_ep = of_graph_get_next_endpoint(node, NULL);
 	if (!node_ep) {

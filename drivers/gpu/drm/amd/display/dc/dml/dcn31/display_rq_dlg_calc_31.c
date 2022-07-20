@@ -859,10 +859,7 @@ static void dml_rq_dlg_get_dlg_params(
 		const display_rq_dlg_params_st *rq_dlg_param,
 		const display_dlg_sys_params_st *dlg_sys_param,
 		const bool cstate_en,
-		const bool pstate_en,
-		const bool vm_en,
-		const bool ignore_viewport_pos,
-		const bool immediate_flip_support)
+		const bool pstate_en)
 {
 	const display_pipe_source_params_st *src = &e2e_pipe_param[pipe_idx].pipe.src;
 	const display_pipe_dest_params_st *dst = &e2e_pipe_param[pipe_idx].pipe.dest;
@@ -970,9 +967,6 @@ static void dml_rq_dlg_get_dlg_params(
 
 	dml_print("DML_DLG: %s: cstate_en = %d\n", __func__, cstate_en);
 	dml_print("DML_DLG: %s: pstate_en = %d\n", __func__, pstate_en);
-	dml_print("DML_DLG: %s: vm_en     = %d\n", __func__, vm_en);
-	dml_print("DML_DLG: %s: ignore_viewport_pos  = %d\n", __func__, ignore_viewport_pos);
-	dml_print("DML_DLG: %s: immediate_flip_support  = %d\n", __func__, immediate_flip_support);
 
 	dml_print("DML_DLG: %s: dppclk_freq_in_mhz     = %3.2f\n", __func__, dppclk_freq_in_mhz);
 	dml_print("DML_DLG: %s: refclk_freq_in_mhz     = %3.2f\n", __func__, refclk_freq_in_mhz);
@@ -983,7 +977,6 @@ static void dml_rq_dlg_get_dlg_params(
 	disp_dlg_regs->refcyc_per_htotal = (unsigned int) (ref_freq_to_pix_freq * (double) htotal * dml_pow(2, 8));
 	disp_dlg_regs->dlg_vblank_end = interlaced ? (vblank_end / 2) : vblank_end;	// 15 bits
 
-	//set_prefetch_mode(mode_lib, cstate_en, pstate_en, ignore_viewport_pos, immediate_flip_support);
 	min_ttu_vblank = get_min_ttu_vblank_in_us(mode_lib, e2e_pipe_param, num_pipes, pipe_idx);	// From VBA
 
 	dlg_vblank_start = interlaced ? (vblank_start / 2) : vblank_start;
@@ -1576,10 +1569,7 @@ void dml31_rq_dlg_get_dlg_reg(
 		const unsigned int num_pipes,
 		const unsigned int pipe_idx,
 		const bool cstate_en,
-		const bool pstate_en,
-		const bool vm_en,
-		const bool ignore_viewport_pos,
-		const bool immediate_flip_support)
+		const bool pstate_en)
 {
 	display_rq_params_st rq_param = {0};
 	display_dlg_sys_params_st dlg_sys_param = {0};
@@ -1610,10 +1600,7 @@ void dml31_rq_dlg_get_dlg_reg(
 			&rq_param.dlg,
 			&dlg_sys_param,
 			cstate_en,
-			pstate_en,
-			vm_en,
-			ignore_viewport_pos,
-			immediate_flip_support);
+			pstate_en);
 	dml_print("DML_DLG: Calculation for pipe[%d] end\n", pipe_idx);
 }
 

@@ -1647,8 +1647,7 @@ static void dml_calculate_dlg_params(
 				pipe_cnt,
 				pipe_idx,
 				cstate_en,
-				context->bw_ctx.bw.dcn.clk.p_state_change_support,
-				false, false, true);
+				context->bw_ctx.bw.dcn.clk.p_state_change_support);
 
 		context->bw_ctx.dml.funcs.rq_dlg_get_rq_reg(&context->bw_ctx.dml,
 				&context->res_ctx.pipe_ctx[i].rq_regs,

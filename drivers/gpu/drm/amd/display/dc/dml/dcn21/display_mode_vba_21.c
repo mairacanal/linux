@@ -120,7 +120,6 @@ static bool CalculatePrefetchSchedule(
 		unsigned int SwathHeightY,
 		unsigned int SwathHeightC,
 		double TWait,
-		bool XFCEnabled,
 		double XFCRemoteSurfaceFlipDelay,
 		bool ProgressiveToInterlaceUnitInOPP,
 		double *DSTXAfterScaler,
@@ -673,7 +672,6 @@ static bool CalculatePrefetchSchedule(
 		unsigned int SwathHeightY,
 		unsigned int SwathHeightC,
 		double TWait,
-		bool XFCEnabled,
 		double XFCRemoteSurfaceFlipDelay,
 		bool ProgressiveToInterlaceUnitInOPP,
 		double *DSTXAfterScaler,
@@ -910,12 +908,7 @@ static bool CalculatePrefetchSchedule(
 			TimeForFetchingMetaPTE = dml_max(*Tno_bw + (double) PDEAndMetaPTEBytesFrame * HostVMInefficiencyFactor / *PrefetchBandwidth,
 					dml_max(UrgentExtraLatency + UrgentLatency * (GPUVMPageTableLevels * (HostVMDynamicLevels + 1) - 1), LineTime / 4));
 		} else {
-// 5/30/2018 - This was an optimization requested from Sy but now NumberOfCursors is no longer a factor
-//             so if this needs to be reinstated, then it should be officially done in the VBA code as well.
-//			if (mode_lib->NumberOfCursors > 0 || XFCEnabled)
-				TimeForFetchingMetaPTE = LineTime / 4;
-//			else
-//				TimeForFetchingMetaPTE = 0.0;
+			TimeForFetchingMetaPTE = LineTime / 4;
 		}
 
 		if ((GPUVMEnable == true || DCCEnable == true)) {
@@ -931,11 +924,7 @@ static bool CalculatePrefetchSchedule(
 											LineTime
 													/ 4.0)));
 		} else {
-// See note above dated 5/30/2018
-//			if (NumberOfCursors > 0 || XFCEnabled)
-				TimeForFetchingRowInVBlank = (LineTime - TimeForFetchingMetaPTE) / 2.0;
-//			else // TODO: Did someone else add this??
-//				TimeForFetchingRowInVBlank = 0.0;
+			TimeForFetchingRowInVBlank = (LineTime - TimeForFetchingMetaPTE) / 2.0;
 		}
 
 		*DestinationLinesToRequestVMInVBlank = dml_ceil(4.0 * TimeForFetchingMetaPTE / LineTime, 1.0) / 4.0;
@@ -943,11 +932,9 @@ static bool CalculatePrefetchSchedule(
 		*DestinationLinesToRequestRowInVBlank = dml_ceil(4.0 * TimeForFetchingRowInVBlank / LineTime, 1.0) / 4.0;
 
 		LinesToRequestPrefetchPixelData = *DestinationLinesForPrefetch
-// See note above dated 5/30/2018
-//						- ((NumberOfCursors > 0 || GPUVMEnable || DCCEnable) ?
 						- ((GPUVMEnable || DCCEnable) ?
 								(*DestinationLinesToRequestVMInVBlank + 2 * *DestinationLinesToRequestRowInVBlank) :
-								0.0); // TODO: Did someone else add this??
+								0.0);
 
 		if (LinesToRequestPrefetchPixelData > 0) {
 
@@ -2200,7 +2187,6 @@ static void DISPCLKDPPCLKDCFCLKDeepSleepPrefetchParametersWatermarksAndPerforman
 							mode_lib->vba.SwathHeightY[k],
 							mode_lib->vba.SwathHeightC[k],
 							TWait,
-							mode_lib->vba.XFCEnabled[k],
 							mode_lib->vba.XFCRemoteSurfaceFlipDelay,
 							mode_lib->vba.ProgressiveToInterlaceUnitInOPP,
 							&locals->DSTXAfterScaler[k],
@@ -3493,7 +3479,6 @@ static noinline void CalculatePrefetchSchedulePerPlane(
 			locals->SwathHeightYThisState[k],
 			locals->SwathHeightCThisState[k],
 			mode_lib->vba.TWait,
-			mode_lib->vba.XFCEnabled[k],
 			mode_lib->vba.XFCRemoteSurfaceFlipDelay,
 			mode_lib->vba.ProgressiveToInterlaceUnitInOPP,
 			&locals->dst_x_after_scaler,

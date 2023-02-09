@@ -10,7 +10,7 @@ use crate::{
     bindings,
     device::{self, RawDevice},
     driver,
-    error::{code::*, from_kernel_result, to_result, Result},
+    error::{code::*, from_kernel_err_ptr, from_kernel_result, to_result, Result},
     io_mem::{IoMem, IoResource, Resource},
     of,
     str::CStr,
@@ -165,6 +165,7 @@ pub trait Driver {
 pub struct Device {
     ptr: *mut bindings::platform_device,
     used_resource: u64,
+    is_registered: bool,
 }
 
 // SAFETY: `Device` only holds a pointer to a C device, which is safe to be used from any thread.
@@ -186,7 +187,22 @@ impl Device {
         Self {
             ptr,
             used_resource: 0,
+            is_registered: false,
         }
+    }
+
+    /// Add a platform-level device and its resources
+    pub fn register(name: &'static CStr, id: i32) -> Result<Self> {
+        // SAFETY: It returns a non-null and valid pointer to a struct platform_device
+        let pdev = from_kernel_err_ptr(unsafe {
+            bindings::platform_device_register_simple(name.as_char_ptr(), id, core::ptr::null(), 0)
+        })?;
+
+        Ok(Self {
+            ptr: pdev,
+            used_resource: 0,
+            is_registered: true,
+        })
     }
 
     /// Returns id of the platform device.
@@ -252,6 +268,15 @@ impl Device {
     }
 }
 
+impl Drop for Device {
+    fn drop(&mut self) {
+        if self.is_registered {
+            // SAFETY: This path only runs if a previous call to `register` completed
+            // successfully.
+            unsafe { bindings::platform_device_unregister(self.ptr) };
+        }
+    }
+}
 // SAFETY: The device returned by `raw_device` is the raw platform device.
 unsafe impl device::RawDevice for Device {
     fn raw_device(&self) -> *mut bindings::device {

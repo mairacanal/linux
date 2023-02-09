@@ -192,6 +192,14 @@ void rust_helper_memcpy_fromio(void *to, const volatile void __iomem *from, long
 }
 EXPORT_SYMBOL_GPL(rust_helper_memcpy_fromio);
 
+struct platform_device *
+rust_helper_platform_device_register_simple(const char *name, int id,
+					    const struct resource *res, unsigned int num)
+{
+	return platform_device_register_simple(name, id, res, num);
+}
+EXPORT_SYMBOL_GPL(rust_helper_platform_device_register_simple);
+
 void rust_helper___spin_lock_init(spinlock_t *lock, const char *name,
 				  struct lock_class_key *key)
 {

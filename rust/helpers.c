@@ -323,6 +323,14 @@ rust_helper_platform_set_drvdata(struct platform_device *pdev,
 }
 EXPORT_SYMBOL_GPL(rust_helper_platform_set_drvdata);
 
+struct platform_device *
+rust_helper_platform_device_register_simple(const char *name, int id,
+					    const struct resource *res, unsigned int num)
+{
+	return platform_device_register_simple(name, id, res, num);
+}
+EXPORT_SYMBOL_GPL(rust_helper_platform_device_register_simple);
+
 const struct of_device_id *rust_helper_of_match_device(
 		const struct of_device_id *matches, const struct device *dev)
 {

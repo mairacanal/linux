@@ -344,6 +344,12 @@ bool rust_helper_of_node_is_root(const struct device_node *np)
 }
 EXPORT_SYMBOL_GPL(rust_helper_of_node_is_root);
 
+int rust_helper_dma_coerce_mask_and_coherent(struct device *dev, u64 mask)
+{
+	return dma_coerce_mask_and_coherent(dev, mask);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_coerce_mask_and_coherent);
+
 struct device_node *rust_helper_of_parse_phandle(const struct device_node *np,
 		const char *phandle_name,
 		int index)

@@ -200,6 +200,12 @@ rust_helper_platform_device_register_simple(const char *name, int id,
 }
 EXPORT_SYMBOL_GPL(rust_helper_platform_device_register_simple);
 
+int rust_helper_dma_coerce_mask_and_coherent(struct device *dev, u64 mask)
+{
+	return dma_coerce_mask_and_coherent(dev, mask);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_coerce_mask_and_coherent);
+
 void rust_helper___spin_lock_init(spinlock_t *lock, const char *name,
 				  struct lock_class_key *key)
 {

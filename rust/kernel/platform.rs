@@ -207,6 +207,12 @@ impl Device {
         // SAFETY: By the type invariants, we know that `self.ptr` is non-null and valid.
         unsafe { (*self.ptr).id }
     }
+
+    /// Similar to the above, except it deals with the case where the device
+    /// does not have dev->dma_mask appropriately setup.
+    pub fn coerse_dma_masks(&mut self, mask: u64) -> Result {
+        to_result(unsafe { bindings::dma_coerce_mask_and_coherent(&mut (*self.ptr).dev, mask) })
+    }
 }
 
 impl Drop for Device {

@@ -167,6 +167,13 @@ pub struct Device {
     used_resource: u64,
 }
 
+// SAFETY: `Device` only holds a pointer to a C device, which is safe to be used from any thread.
+unsafe impl Send for Device {}
+
+// SAFETY: `Device` only holds a pointer to a C device, references to which are safe to be used
+// from any thread.
+unsafe impl Sync for Device {}
+
 impl Device {
     /// Creates a new device from the given pointer.
     ///

@@ -38,6 +38,7 @@ pub mod delay;
 pub mod device;
 #[cfg(CONFIG_DMA_SHARED_BUFFER)]
 pub mod dma_fence;
+pub mod dma_resv;
 pub mod driver;
 #[cfg(CONFIG_DRM = "y")]
 pub mod drm;

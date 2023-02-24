@@ -65,6 +65,11 @@ pub trait RawDmaFence: crate::private::Sealed {
         to_result(unsafe { bindings::dma_fence_signal(self.raw()) })
     }
 
+    /// Return an indication if the fence is signaled yet.
+    fn is_signaled(&self) -> bool {
+        unsafe { bindings::dma_fence_is_signaled(self.raw()) }
+    }
+
     /// Set the error flag on this fence
     fn set_error(&self, err: Error) {
         unsafe { bindings::dma_fence_set_error(self.raw(), err.to_kernel_errno()) };

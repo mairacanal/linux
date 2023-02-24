@@ -420,6 +420,12 @@ void rust_helper_dma_fence_put(struct dma_fence *fence)
 }
 EXPORT_SYMBOL_GPL(rust_helper_dma_fence_put);
 
+bool rust_helper_dma_fence_is_signaled(struct dma_fence *fence)
+{
+	return dma_fence_is_signaled(fence);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_fence_is_signaled);
+
 struct dma_fence_chain *rust_helper_dma_fence_chain_alloc(void)
 {
 	return dma_fence_chain_alloc();

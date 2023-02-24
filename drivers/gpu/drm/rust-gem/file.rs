@@ -27,6 +27,14 @@ impl drm::file::DriverFile for File {
 }
 
 impl File {
+    pub(crate) fn mock(
+        _device: &VgemDevice,
+        _data: &mut bindings::drm_vgem_mock,
+        _file: &DrmFile,
+    ) -> Result<u32> {
+        Ok(0)
+    }
+
     /// vgem_fence_attach_ioctl (DRM_IOCTL_VGEM_FENCE_ATTACH):
     ///
     /// Create and attach a fence to the vGEM handle. This fence is then exposed

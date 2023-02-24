@@ -36,8 +36,13 @@ extern "C" {
 /* Please note that modifications to all structs defined here are
  * subject to backwards-compatibility constraints.
  */
+#define DRM_VGEM_MOCK           0x0
 #define DRM_VGEM_FENCE_ATTACH	0x1
 #define DRM_VGEM_FENCE_SIGNAL	0x2
+
+struct drm_vgem_mock {
+	__u32 mbz[2];
+};
 
 struct drm_vgem_fence_attach {
 	__u32 handle;
@@ -54,6 +59,7 @@ struct drm_vgem_fence_signal {
 
 /* Note: this is an enum so that it can be resolved by Rust bindgen. */
 enum {
+	DRM_IOCTL_VGEM_MOCK	= DRM_IOWR(DRM_COMMAND_BASE + DRM_VGEM_MOCK, struct drm_vgem_mock),
 	DRM_IOCTL_VGEM_FENCE_ATTACH	= DRM_IOWR(DRM_COMMAND_BASE + DRM_VGEM_FENCE_ATTACH, struct drm_vgem_fence_attach),
 	DRM_IOCTL_VGEM_FENCE_SIGNAL	= DRM_IOW(DRM_COMMAND_BASE + DRM_VGEM_FENCE_SIGNAL, struct drm_vgem_fence_signal),
 };

@@ -55,6 +55,7 @@ impl drv::Driver for VgemDriver {
     const FEATURES: u32 = drv::FEAT_GEM | drv::FEAT_RENDER;
 
     kernel::declare_drm_ioctls! {
+        (VGEM_MOCK, drm_vgem_mock, ioctl::RENDER_ALLOW, file::File::mock),
         (VGEM_FENCE_ATTACH, drm_vgem_fence_attach, ioctl::RENDER_ALLOW, file::File::attach),
         (VGEM_FENCE_SIGNAL, drm_vgem_fence_signal, ioctl::RENDER_ALLOW, file::File::signal),
     }

@@ -110,6 +110,9 @@ unsafe extern "C" fn gem_create_object<T: DriverObject>(
     let new: &mut Object<T> = unsafe { &mut *(p as *mut _) };
 
     new.obj.base.funcs = &Object::<T>::VTABLE;
+    new.obj.map_wc = true;
+
+    pr_info!("Creating object...");
     &mut new.obj.base
 }
 

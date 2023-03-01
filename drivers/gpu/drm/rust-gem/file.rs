@@ -7,10 +7,10 @@ use core::ops::Deref;
 use kernel::dma_fence::RawDmaFence;
 use kernel::drm::gem::BaseObject;
 use kernel::prelude::*;
-use kernel::{bindings, dma_fence::UniqueFence, drm, drm::gem::shmem, xarray};
+use kernel::{bindings, drm, drm::gem::shmem, xarray};
 
 pub(crate) struct File {
-    fences: xarray::XArray<Box<Option<UniqueFence<VgemFence>>>>,
+    fences: xarray::XArray<Box<Option<VgemFence>>>,
 }
 
 /// Convenience type alias for our DRM `File` type.
@@ -32,6 +32,10 @@ impl File {
     /// Create and attach a fence to the vGEM handle. This fence is then exposed
     /// via the dma-buf reservation object and visible to consumers of the exported
     /// dma-buf.
+    ///
+    /// This returns the handle for the new fence that must be signaled within 10
+    /// seconds (or otherwise it will automatically expire). See
+    /// vgem_fence_signal_ioctl (DRM_IOCTL_VGEM_FENCE_SIGNAL).
     ///
     /// If the vGEM handle does not exist, vgem_fence_attach_ioctl returns -ENOENT.
     ///
@@ -83,6 +87,9 @@ impl File {
     ///
     /// Signal and consume a fence ealier attached to a vGEM handle using
     /// vgem_fence_attach_ioctl (DRM_IOCTL_VGEM_FENCE_ATTACH).
+    ///
+    /// All fences must be signaled within 10s of attachment or otherwise they
+    /// will automatically expire (and a vgem_fence_signal_ioctl returns -ETIMEDOUT).
     ///
     /// Signaling a fence indicates to all consumers of the dma-buf that the
     /// client has completed the operation associated with the fence, and that the

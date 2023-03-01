@@ -59,6 +59,7 @@ pub mod std_vendor;
 pub mod str;
 pub mod sync;
 pub mod time;
+pub mod timer;
 pub mod types;
 pub mod user_ptr;
 pub mod xarray;

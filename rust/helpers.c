@@ -34,6 +34,7 @@
 #include <linux/platform_device.h>
 #include <linux/rcupdate.h>
 #include <linux/refcount.h>
+#include <linux/timer.h>
 #include <linux/xarray.h>
 
 __noreturn void rust_helper_BUG(void)
@@ -404,6 +405,20 @@ unsigned long rust_helper_msecs_to_jiffies(const unsigned int m)
 	return msecs_to_jiffies(m);
 }
 EXPORT_SYMBOL_GPL(rust_helper_msecs_to_jiffies);
+
+int rust_helper_del_timer_sync(struct timer_list *timer)
+{
+	return del_timer_sync(timer);
+}
+EXPORT_SYMBOL_GPL(rust_helper_del_timer_sync);
+
+void rust_helper_timer_setup(struct timer_list *timer,
+			     void (*callback)(struct timer_list *timer),
+			     u32 flags)
+{
+	timer_setup(timer, callback, flags);
+}
+EXPORT_SYMBOL_GPL(rust_helper_timer_setup);
 
 #ifdef CONFIG_DMA_SHARED_BUFFER
 

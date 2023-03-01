@@ -30,6 +30,7 @@
 #include <linux/irqchip/chained_irq.h>
 #include <linux/irqdomain.h>
 #include <linux/irq.h>
+#include <linux/jiffies.h>
 #include <linux/mutex.h>
 #include <linux/netdevice.h>
 #include <linux/of_device.h>
@@ -37,6 +38,7 @@
 #include <linux/sched/signal.h>
 #include <linux/security.h>
 #include <linux/skbuff.h>
+#include <linux/timer.h>
 #include <linux/uaccess.h>
 #include <linux/uio.h>
 
@@ -375,6 +377,26 @@ void *rust_helper_amba_get_drvdata(struct amba_device *dev)
 	return amba_get_drvdata(dev);
 }
 EXPORT_SYMBOL_GPL(rust_helper_amba_get_drvdata);
+
+int rust_helper_del_timer_sync(struct timer_list *timer)
+{
+	return del_timer_sync(timer);
+}
+EXPORT_SYMBOL_GPL(rust_helper_del_timer_sync);
+
+void rust_helper_timer_setup(struct timer_list *timer,
+			     void (*callback)(struct timer_list *timer),
+			     u32 flags)
+{
+	timer_setup(timer, callback, flags);
+}
+EXPORT_SYMBOL_GPL(rust_helper_timer_setup);
+
+unsigned long rust_helper_msecs_to_jiffies(const unsigned int m)
+{
+	return msecs_to_jiffies(m);
+}
+EXPORT_SYMBOL_GPL(rust_helper_msecs_to_jiffies);
 
 void *
 rust_helper_platform_get_drvdata(const struct platform_device *pdev)

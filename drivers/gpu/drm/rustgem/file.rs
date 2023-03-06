@@ -33,6 +33,10 @@ impl File {
     /// via the dma-buf reservation object and visible to consumers of the exported
     /// dma-buf.
     ///
+    /// This returns the handle for the new fence that must be signaled within 10
+    /// seconds (or otherwise it will automatically expire). See
+    /// signal (DRM_IOCTL_VGEM_FENCE_SIGNAL).
+    ///
     /// If the vGEM handle does not exist, attach returns -ENOENT.
     ///
     pub(crate) fn attach(
@@ -83,6 +87,9 @@ impl File {
     ///
     /// Signal and consume a fence earlier attached to a vGEM handle using
     /// attach (DRM_IOCTL_VGEM_FENCE_ATTACH).
+    ///
+    /// All fences must be signaled within 10s of attachment or otherwise they
+    /// will automatically expire (and signal returns -ETIMEDOUT).
     ///
     /// Signaling a fence indicates to all consumers of the dma-buf that the
     /// client has completed the operation associated with the fence, and that the

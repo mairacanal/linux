@@ -60,9 +60,21 @@ pub trait RawDmaFence: crate::private::Sealed {
         }
     }
 
+    /// Return the seqno from this fence
+    fn seqno(&self) -> u64 {
+        // SAFETY: We hold a reference to a dma_fence and every dma_fence holds
+        // a seqno.
+        unsafe { (*self.raw()).seqno }
+    }
+
     /// Signal completion of this fence
     fn signal(&self) -> Result {
         to_result(unsafe { bindings::dma_fence_signal(self.raw()) })
+    }
+
+    /// Return an indication if the fence is signaled yet.
+    fn is_signaled(&self) -> bool {
+        unsafe { bindings::dma_fence_is_signaled(self.raw()) }
     }
 
     /// Set the error flag on this fence

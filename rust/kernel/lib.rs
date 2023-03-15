@@ -38,6 +38,7 @@ pub mod delay;
 pub mod device;
 #[cfg(CONFIG_DMA_SHARED_BUFFER)]
 pub mod dma_fence;
+pub mod dma_resv;
 pub mod driver;
 #[cfg(CONFIG_DRM = "y")]
 pub mod drm;
@@ -224,4 +225,16 @@ macro_rules! container_of {
         let offset = $crate::offset_of!($type, $($f)*);
         ptr.wrapping_offset(-offset) as *const $type
     }}
+}
+
+/// Initializes a timer.
+///
+/// It automatically defines a new lockdep lock for the timer.
+#[macro_export]
+macro_rules! timer_init {
+    ($timer:expr, $flags:expr, $name:expr) => {{
+        static CLASS: $crate::sync::LockClassKey = $crate::sync::LockClassKey::new();
+
+        $timer.init_timer($flags, $crate::c_str!($name), &CLASS);
+    }};
 }

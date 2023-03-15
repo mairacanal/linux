@@ -24,6 +24,9 @@ use gem::BaseObject;
 pub trait DriverObject: gem::BaseDriverObject<Object<Self>> {
     /// Parent `Driver` for this object.
     type Driver: drv::Driver;
+
+    /// Define the map object write-combined
+    const MAP_WC: bool = false;
 }
 
 // FIXME: This is terrible and I don't know how to avoid it
@@ -110,6 +113,8 @@ unsafe extern "C" fn gem_create_object<T: DriverObject>(
     let new: &mut Object<T> = unsafe { &mut *(p as *mut _) };
 
     new.obj.base.funcs = &Object::<T>::VTABLE;
+    new.obj.map_wc = <T>::MAP_WC;
+
     &mut new.obj.base
 }
 

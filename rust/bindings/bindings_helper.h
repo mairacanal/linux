@@ -19,6 +19,7 @@
 #include <linux/dma-fence.h>
 #include <linux/dma-fence-chain.h>
 #include <linux/dma-mapping.h>
+#include <linux/dma-resv.h>
 #include <linux/fs.h>
 #include <linux/iosys-map.h>
 #include <linux/io-pgtable.h>
@@ -36,6 +37,7 @@
 #include <linux/xarray.h>
 #include <uapi/asm-generic/ioctl.h>
 #include <uapi/drm/drm.h>
+#include <uapi/drm/vgem_drm.h>
 
 /* `bindgen` gets confused at certain things. */
 const gfp_t BINDINGS_GFP_KERNEL = GFP_KERNEL;

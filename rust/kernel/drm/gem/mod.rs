@@ -11,6 +11,7 @@ use alloc::boxed::Box;
 
 use crate::{
     bindings,
+    dma_resv::DmaResv,
     drm::{device, drv, file},
     error::{to_result, Result},
     prelude::*,
@@ -134,6 +135,12 @@ pub trait BaseObject: IntoGEMObject {
     /// Returns the size of the object in bytes.
     fn size(&self) -> usize {
         self.gem_obj().size
+    }
+
+    /// Returns the pointer to reservation object associated with this GEM object.
+    fn resv(&self) -> DmaResv {
+        // SAFETY: Every GEM object holds a reference to a reservation object
+        unsafe { DmaResv::from_raw(self.gem_obj().resv) }
     }
 
     /// Sets the exportable flag, which controls whether the object can be exported via PRIME.

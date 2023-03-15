@@ -25,6 +25,7 @@
 #include <linux/build_bug.h>
 #include <linux/device.h>
 #include <linux/dma-fence.h>
+#include <linux/dma-resv.h>
 #include <linux/dma-fence-chain.h>
 #include <linux/dma-mapping.h>
 #include <linux/err.h>
@@ -323,6 +324,14 @@ rust_helper_platform_set_drvdata(struct platform_device *pdev,
 }
 EXPORT_SYMBOL_GPL(rust_helper_platform_set_drvdata);
 
+struct platform_device *
+rust_helper_platform_device_register_simple(const char *name, int id,
+					    const struct resource *res, unsigned int num)
+{
+	return platform_device_register_simple(name, id, res, num);
+}
+EXPORT_SYMBOL_GPL(rust_helper_platform_device_register_simple);
+
 const struct of_device_id *rust_helper_of_match_device(
 		const struct of_device_id *matches, const struct device *dev)
 {
@@ -335,6 +344,12 @@ bool rust_helper_of_node_is_root(const struct device_node *np)
 	return of_node_is_root(np);
 }
 EXPORT_SYMBOL_GPL(rust_helper_of_node_is_root);
+
+int rust_helper_dma_coerce_mask_and_coherent(struct device *dev, u64 mask)
+{
+	return dma_coerce_mask_and_coherent(dev, mask);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_coerce_mask_and_coherent);
 
 struct device_node *rust_helper_of_parse_phandle(const struct device_node *np,
 		const char *phandle_name,
@@ -405,6 +420,12 @@ void rust_helper_dma_fence_put(struct dma_fence *fence)
 }
 EXPORT_SYMBOL_GPL(rust_helper_dma_fence_put);
 
+bool rust_helper_dma_fence_is_signaled(struct dma_fence *fence)
+{
+	return dma_fence_is_signaled(fence);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_fence_is_signaled);
+
 struct dma_fence_chain *rust_helper_dma_fence_chain_alloc(void)
 {
 	return dma_fence_chain_alloc();
@@ -422,6 +443,24 @@ void rust_helper_dma_fence_set_error(struct dma_fence *fence, int error)
 	dma_fence_set_error(fence, error);
 }
 EXPORT_SYMBOL_GPL(rust_helper_dma_fence_set_error);
+
+enum dma_resv_usage rust_helper_dma_resv_usage_rw(bool write)
+{
+	return dma_resv_usage_rw(write);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_resv_usage_rw);
+
+int rust_helper_dma_resv_lock(struct dma_resv *obj, struct ww_acquire_ctx *ctx)
+{
+	return dma_resv_lock(obj, ctx);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_resv_lock);
+
+void rust_helper_dma_resv_unlock(struct dma_resv *obj)
+{
+	dma_resv_unlock(obj);
+}
+EXPORT_SYMBOL_GPL(rust_helper_dma_resv_unlock);
 
 #endif
 
